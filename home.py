@@ -12,27 +12,28 @@ st.set_page_config(
 
 
 # A simple HTML/JS snippet to call the API endpoint and display the result.
-html_code = """
-<html>
-  <body>
-    <script>
-      fetch('/user-name')  // relative path so that the browser sends the cookies
-        .then(response => response.json())
-        .then(data => {
-          // Display the principal name in the div
-          document.getElementById('output').innerText = "Hello, " + data.principal_name + "!";
-        })
-        .catch(error => {
-          document.getElementById('output').innerText = "Error fetching user info.";
-          console.error("Error:", error);
-        });
-    </script>
-    <div id="output">Loading user info...</div>
-  </body>
-</html>
-"""
 
-components.html(html_code, height=150)
+# html_code = """
+# <html>
+#   <body>
+#     <script>
+#       fetch('/user-name')  // relative path so that the browser sends the cookies
+#         .then(response => response.json())
+#         .then(data => {
+#           // Display the principal name in the div
+#           document.getElementById('output').innerText = "Hello, " + data.principal_name + "!";
+#         })
+#         .catch(error => {
+#           document.getElementById('output').innerText = "Error fetching user info.";
+#           console.error("Error:", error);
+#         });
+#     </script>
+#     <div id="output">Loading user info...</div>
+#   </body>
+# </html>
+# """
+
+# components.html(html_code, height=150)
 
 
 
