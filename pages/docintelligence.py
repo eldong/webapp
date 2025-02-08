@@ -44,7 +44,7 @@ def base64_encode(plain_text):
 
 st.title("Document Intelligence")
 
-uploaded_files = st.file_uploader("Choose a file", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
 
 if uploaded_files:
     upload_to_azure_storage(uploaded_files)
