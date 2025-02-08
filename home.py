@@ -1,5 +1,6 @@
 import streamlit as st
-import requests
+import json
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Gen AI Portal",
@@ -9,22 +10,30 @@ st.set_page_config(
 #st.sidebar.title("Navigation")
 #st.sidebar.success("Select an action to run.")
 
-# Replace this URL with the actual URL of your Flask API endpoint
-api_url = "https://occaiportalpoc.azurewebsites.net/user-name"
 
-try:
-    # Make a GET request to the Flask API.
-    # IMPORTANT: For the header to be present, the request must pass through Easy Auth.
-    response = requests.get(api_url)
-    response.raise_for_status()  # Raise an error for non-2xx responses.
-    data = response.json()
-    
-    if "principal_name" in data:
-        st.write(f"Hello, {data['principal_name']}!")
-    else:
-        st.error("User principal name not found in response.")
-except Exception as e:
-    st.error(f"Error fetching user info: {e}")
+# A simple HTML/JS snippet to call the API endpoint and display the result.
+html_code = """
+<html>
+  <body>
+    <script>
+      fetch('/user-name')  // relative path so that the browser sends the cookies
+        .then(response => response.json())
+        .then(data => {
+          // Display the principal name in the div
+          document.getElementById('output').innerText = "Hello, " + data.principal_name + "!";
+        })
+        .catch(error => {
+          document.getElementById('output').innerText = "Error fetching user info.";
+          console.error("Error:", error);
+        });
+    </script>
+    <div id="output">Loading user info...</div>
+  </body>
+</html>
+"""
+
+components.html(html_code, height=150)
+
 
 
 st.markdown(
