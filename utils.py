@@ -3,6 +3,7 @@ import msal
 import os
 import requests
 import streamlit as st
+import webbrowser
 
 # --- Configuration Constants ---
 CLIENT_ID = os.getenv("CLIENT_ID")           # Replace with your Azure AD Application (client) ID
@@ -47,6 +48,36 @@ def get_user_name(token_response):
         # Use 'preferred_username' or 'name' based on your preference and availability.
         return id_token_claims.get("preferred_username") or id_token_claims.get("name")
     return None
+
+def get_user_info2():
+    # Create an MSAL public client application instance
+    app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY)
+
+    # Get the authorization URL to redirect the user to sign in
+    auth_url = app.get_authorization_request_url(SCOPE, redirect_uri=REDIRECT_URI)
+    print("Go to the following URL to sign in:")
+    print(auth_url)
+
+    # Optionally, open the URL in a web browser
+    webbrowser.open(auth_url)
+
+    # After the user signs in, they will be redirected to your redirect URI
+    # with a code in the URL. Capture that code.
+    auth_code = input("Paste the authorization code here: ")
+
+    # Exchange the authorization code for tokens
+    result = app.acquire_token_by_authorization_code(
+        auth_code,
+        scopes=SCOPE,
+        redirect_uri=REDIRECT_URI
+    )
+
+    if "id_token_claims" in result:
+        id_token_claims = result["id_token_claims"]
+        user_name = id_token_claims.get("name")
+        print("Logged in as:", user_name)
+    else:
+        print("Authentication error:", result.get("error"), result.get("error_description"))
 
 def get_user_info():
 
