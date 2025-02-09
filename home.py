@@ -2,34 +2,12 @@ import streamlit as st
 import json
 import streamlit.components.v1 as components
 import msal
-from utils import get_auth_url, get_token_from_code, get_user_name, build_msal_app, get_user_info
-from flask import Flask, request
+from utils import  get_token
 from threading import Thread
-import requests
+from streamlit.web.server.websocket_headers import _get_websocket_headers
 
 
 
-
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    # Extract the X-MS-CLIENT-PRINCIPAL-NAME header
-    client_principal_name = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
-    return f'Client Principal Name: {client_principal_name}'
-
-def run_flask():
-    app.run(port=5000)
-
-if __name__ == '__main__':
-    # Run Flask in a separate thread
-    thread = Thread(target=run_flask)
-    thread.start()
-
-# Function to get the headers from the request
-def get_headers():
-    response = requests.get('http://localhost:5000')
-    return response.headers
 
 
 st.set_page_config(
@@ -71,40 +49,11 @@ if st.session_state.token_response is None:
     # else:
     #     st.write("Failed to fetch user information")
 
-    # Get the headers
-    headers = get_headers()
 
-    # Extract the X-MS-CLIENT-PRINCIPAL-NAME header
-    client_principal_name = headers.get('X-MS-CLIENT-PRINCIPAL-NAME')  
-
-    # Display the client principal name
-    if client_principal_name:
-        st.write(f'Client Principal Name: {client_principal_name}')
-    else:
-        st.write('Client Principal Name header not found')          
-    
-    # Check for the authorization code in the query parameters.
-    query_params = st.query_params
-    if "code" in query_params:
-        auth_code = query_params["code"][0]
-        result = get_token_from_code(auth_code)
-        if "access_token" in result:
-            st.session_state.token_response = result
-            st.experimental_set_query_params()  # Clear query parameters after processing.
-            st.success("Login successful!")
-        else:
-            st.error("Login failed. Please try again.")
-else:
-    # User is authenticated; display their name.
-    user_name = get_user_name(st.session_state.token_response)
-    if user_name:
-        st.write(f"Hello, {user_name}!")
-    else:
-        st.write("Hello!")
-
-
-
-
+headers = _get_websocket_headers()
+header_token = headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+st.write("Header Token:")
+st.write(header_token)
 
 st.markdown(
     """

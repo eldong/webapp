@@ -22,6 +22,20 @@ def build_msal_app(cache=None):
         token_cache=cache
     )
 
+
+# Function to get the token
+def get_token():
+    app = build_msal_app()
+    accounts = app.get_accounts()
+    if accounts:
+        result = app.acquire_token_silent(scopes=['User.Read'], account=accounts)    
+    auth_url = app.get_authorization_request_url(scopes=['User.Read'], redirect_uri=REDIRECT_URI)
+    st.write(f'Please go to this URL to authenticate: {auth_url}')
+    code = st.text_input('Enter the authorization code:')
+    if code:
+        result = app.acquire_token_by_authorization_code(code, scopes=['User.Read'], redirect_uri=REDIRECT_URI)
+        return result
+
 def get_auth_url():
     """Generates the Azure AD authorization URL."""
     msal_app = build_msal_app()
