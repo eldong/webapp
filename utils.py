@@ -2,6 +2,7 @@
 import msal
 import os
 import requests
+import streamlit as st
 
 # --- Configuration Constants ---
 CLIENT_ID = os.getenv("CLIENT_ID")           # Replace with your Azure AD Application (client) ID
@@ -49,25 +50,26 @@ def get_user_name(token_response):
 
 def get_user_info():
 
-    # app = msal.ConfidentialClientApplication(
-    #     CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET
-    # )
+    app = msal.ConfidentialClientApplication(
+        CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET
+    )
 
-    # result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
-    # if "access_token" in result:
-    #     token = result['access_token']
-    #     headers = {
-    #         'Authorization': f'Bearer {token}'
-    #     }
-    #     response = requests.get("https://occaiportalpoc.azurewebsites.net/.auth/me", headers=headers)
-    #     if response.status_code == 200:
-    #         user_info = response.json()
-    #         user_name = user_info['user_claims']['val']
-    #         print(f"Logged in user: {user_name}")
-    #     else:
-    #         print("Failed to fetch user information")
-    # else:
-    #     print("Failed to acquire token")
+    result = app.acquire_token_for_client(scopes=["openid", "profile"])
+    st.write(result)
+    if "access_token" in result:
+        token = result['access_token']
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
+        response = requests.get("https://occaiportalpoc.azurewebsites.net/.auth/me", headers=headers)
+        if response.status_code == 200:
+            user_info = response.json()
+            user_name = user_info['user_claims']['val']
+            print(f"Logged in user: {user_name}")
+        else:
+            print("Failed to fetch user information")
+    else:
+        print("Failed to acquire token")
 
 
     response = requests.get("https://occaiportalpoc.azurewebsites.net/.auth/me")
