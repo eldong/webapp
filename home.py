@@ -38,9 +38,9 @@ if st.session_state.token_response is None:
     user_info = get_user_info()
     if user_info:
         user_name = user_info['user_claims']['val']
-        print(f"Logged in user: {user_name}")
+        st.write(f"Logged in user: {user_name}")
     else:
-        print("Failed to fetch user information")
+        st.write("Failed to fetch user information")
     
     # Check for the authorization code in the query parameters.
     query_params = st.query_params
