@@ -36,6 +36,7 @@ if st.session_state.token_response is None:
 
 
     user_info = get_user_info()
+    st.write(user_info)
     if user_info:
         user_name = user_info['user_claims']['val']
         st.write(f"Logged in user: {user_name}")
