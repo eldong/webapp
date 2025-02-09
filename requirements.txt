@@ -3,3 +3,4 @@ azure-storage-blob
 azure-storage-queue
 python-dotenv
 Flask
+msal
