@@ -55,7 +55,10 @@ if st.session_state.token_response is None:
 #st.write("Header Token:")
 #st.write(header_token)
 
-header1 =st.context.headers
+header1 =st.context.headers["X-MS-CLIENT-PRINCIPAL-NAME"]
+st.write("Context Header:")
+st.write(header1)
+header1 =st.context.headers["X-Ms-Client-Principal-Name"]
 st.write("Context Header:")
 st.write(header1)
 
