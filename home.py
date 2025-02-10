@@ -33,9 +33,9 @@ st.markdown(
  """
 )
 
-header =st.context.headers["X-MS-CLIENT-PRINCIPAL-NAME"]
+header =st.context.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
 # Check if name is either empty or only contains whitespace.
-if not header or not header.strip():
+if header is None:
     header = "unknown"
 foldername = header.lower().replace(" ", "_")
 st.write("Hello " + header)
