@@ -1,13 +1,5 @@
 import streamlit as st
-import json
 import streamlit.components.v1 as components
-import msal
-from utils import  get_token, read_aad_username
-from threading import Thread
-from streamlit.web.server.websocket_headers import _get_websocket_headers
-
-
-
 
 
 st.set_page_config(
@@ -17,12 +9,6 @@ st.set_page_config(
 
 #st.sidebar.title("Navigation")
 #st.sidebar.success("Select an action to run.")
-
-if "token_response" not in st.session_state:
-    st.session_state.token_response = None
-
-if st.session_state.token_response is None:
-    st.info("You are not logged in. Please sign in:")
     
     # Display a login link using the helper function.
     #auth_url = get_auth_url()
@@ -41,34 +27,19 @@ if st.session_state.token_response is None:
     # st.components.v1.html(redirect_html, height=100)    
 
 
-    # user_info = get_user_info()
-    # st.write(user_info)
-    # if user_info:
-    #     user_name = user_info['user_claims']['val']
-    #     st.write(f"Logged in user: {user_name}")
-    # else:
-    #     st.write("Failed to fetch user information")
-
-
-#headers = _get_websocket_headers()
-#header_token = headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
-#st.write("Header Token:")
-#st.write(header_token)
-
-header1 =st.context.headers["X-MS-CLIENT-PRINCIPAL-NAME"]
-st.write("Context Header:")
-st.write(header1)
-header1 =st.context.headers["X-Ms-Client-Principal-Name"]
-st.write("Context Header:")
-st.write(header1)
-
-# username = read_aad_username()
-
 st.markdown(
     """
     ### OCC Gen AI Portal
  """
 )
+
+header =st.context.headers["X-MS-CLIENT-PRINCIPAL-NAME"]
+# Check if name is either empty or only contains whitespace.
+if not header or not header.strip():
+    header = "unknown"
+foldername = header.lower().replace(" ", "_")
+st.write("Hello " + header)
+
 st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown(
     """

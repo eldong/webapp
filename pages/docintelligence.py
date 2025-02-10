@@ -6,6 +6,7 @@ from azure.storage.blob import BlobServiceClient
 from azure.storage.queue import QueueServiceClient
 import base64
 import os
+from home import foldername
 
 
 # Azure Storage Account details 
@@ -21,7 +22,7 @@ def upload_to_azure_storage(files):
 
     for i, file in enumerate(files):
         blob_service_client = BlobServiceClient.from_connection_string(f"{DOCUMENT_STORAGE_CONNECTIONSTRING}")
-        blob_client = blob_service_client.get_blob_client(container=TEMPLATE_DOCUMENT_CONTAINER, blob=file.name)
+        blob_client = blob_service_client.get_blob_client(container=TEMPLATE_DOCUMENT_CONTAINER, blob=foldername + "/" + file.name)
         blob_client.upload_blob(file, overwrite=True)
         
         # Update the progress bar
