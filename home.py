@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import streamlit.components.v1 as components
 import msal
-from utils import  get_token
+from utils import  get_token, read_aad_username
 from threading import Thread
 from streamlit.web.server.websocket_headers import _get_websocket_headers
 
@@ -50,10 +50,16 @@ if st.session_state.token_response is None:
     #     st.write("Failed to fetch user information")
 
 
-headers = _get_websocket_headers()
-header_token = headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
-st.write("Header Token:")
-st.write(header_token)
+#headers = _get_websocket_headers()
+#header_token = headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+#st.write("Header Token:")
+#st.write(header_token)
+
+header1 =st.context.headers
+st.write("Context Header:")
+st.write(header1)
+
+# username = read_aad_username()
 
 st.markdown(
     """

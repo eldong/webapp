@@ -4,6 +4,8 @@ import os
 import requests
 import streamlit as st
 import webbrowser
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+from streamlit.web.server.server import Server
 
 # --- Configuration Constants ---
 CLIENT_ID = os.getenv("CLIENT_ID")           # Replace with your Azure AD Application (client) ID
@@ -123,3 +125,19 @@ def get_user_info():
         return user_info
     else:
         return response
+    
+
+def read_aad_username():
+    session_id = get_script_run_ctx().session_id
+    session_info = Server.get_current()._get_session_info(session_id)
+    headers = session_info.ws.request.headers
+
+    headers = headers._dict
+
+    if "X-Ms-Client-Principal-Name" in headers:
+        username = headers["X-Ms-Client-Principal-Name"]
+        st.write(f"Logged in as {username}")
+    else:
+        st.warning(f"could not directly read username from azure active directory.")
+        username = None
+    return username
