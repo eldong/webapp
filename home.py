@@ -44,7 +44,7 @@ if uploaded_files:
     
     st.success("File uploaded to Azure Storage - Now processing!")    # Add your file processing code here
     url = "https://occ-notebook-test.azurewebsites.net/api/generate_insights"
-    params = {"folder_name": foldername}  # This sets the 'folder' parameter to 'name'
+    params = {"folder_name": foldername} 
 
     response = requests.get(url, params=params)
 
