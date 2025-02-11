@@ -50,7 +50,7 @@ if uploaded_files:
 
     # Check the status code and response data
     if response.ok:
-        data = response.json()  # or response.text depending on the API response format
+        data = response.text  # or response.text depending on the API response format
         print("Response data:", data)
     else:
         print("Request failed with status:", response.status_code)    
