@@ -1,30 +1,18 @@
 import streamlit as st
 import streamlit.components.v1 as components
+from azure.storage.blob import BlobServiceClient
+from azure.storage.queue import QueueServiceClient
+import datetime
+import random
+import requests
+
+from utils import upload_to_azure_storage, update_status_in_queue
 
 
 st.set_page_config(
     page_title="Gen AI Portal",
     page_icon="👋",
 )
-
-#st.sidebar.title("Navigation")
-#st.sidebar.success("Select an action to run.")
-    
-    # Display a login link using the helper function.
-    #auth_url = get_auth_url()
-    #st.markdown(f"[Click here to sign in with Azure AD]({auth_url})", unsafe_allow_html=True)
-    # Automatically redirect the user using an HTML meta refresh.
-    # redirect_html = f"""
-    # <html>
-    #   <head>
-    #     <meta http-equiv="refresh" content="0; url={auth_url}">
-    #   </head>
-    #   <body>
-    #     If you are not redirected automatically, <a href="{auth_url}">click here</a>.
-    #   </body>
-    # </html>
-    # """
-    # st.components.v1.html(redirect_html, height=100)    
 
 
 st.markdown(
@@ -37,8 +25,35 @@ header =st.context.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
 # Check if name is either empty or only contains whitespace.
 if header is None:
     header = "unknown"
-foldername = header.lower().replace(" ", "_")
+
 st.write("Hello " + header)
+
+## Create folder with current date and random number
+date_string = datetime.datetime.now().strftime("%m%d%Y")
+random_number = random.randint(100000, 999999)
+foldername = f"{date_string}_{random_number}"
+
+
+uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+
+if uploaded_files:
+    upload_to_azure_storage(uploaded_files, foldername)
+    
+    #Upload status to queue
+    update_status_in_queue()      
+    
+    st.success("File uploaded to Azure Storage - Now processing!")    # Add your file processing code here
+    url = "https://occ-notebook-test.azurewebsites.net/api/generate_insights"
+    params = {"folder_name": foldername}  # This sets the 'folder' parameter to 'name'
+
+    response = requests.get(url, params=params)
+
+    # Check the status code and response data
+    if response.ok:
+v        data = response.json()  # or response.text depending on the API response format
+        print("Response data:", data)
+    else:
+        print("Request failed with status:", response.status_code)    
 
 st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown(

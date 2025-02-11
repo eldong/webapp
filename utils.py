@@ -1,143 +1,44 @@
 # utils.py
-import msal
-import os
-import requests
+
 import streamlit as st
-import webbrowser
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit.web.server.server import Server
-
-# --- Configuration Constants ---
-CLIENT_ID = os.getenv("CLIENT_ID")           # Replace with your Azure AD Application (client) ID
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")    # Replace with your client secret
-TENANT_ID = os.getenv("TENANT_ID")          # Replace with your Directory (tenant) ID
-AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = os.getenv("REDIRECT_URI")   # Update for production as needed
-SCOPE = ["User.Read"]                   # Adjust scopes as needed
-
-def build_msal_app(cache=None):
-    """Creates and returns an MSAL ConfidentialClientApplication object."""
-    return msal.ConfidentialClientApplication(
-        CLIENT_ID,
-        authority=AUTHORITY,
-        client_credential=CLIENT_SECRET,
-        token_cache=cache
-    )
+import base64
+from azure.storage.blob import BlobServiceClient
+from azure.storage.queue import QueueServiceClient
+import os
 
 
-# Function to get the token
-def get_token():
-    app = build_msal_app()
-    accounts = app.get_accounts()
-    if accounts:
-        result = app.acquire_token_silent(scopes=['User.Read'], account=accounts)    
-    auth_url = app.get_authorization_request_url(scopes=['User.Read'], redirect_uri=REDIRECT_URI)
-    st.write(f'Please go to this URL to authenticate: {auth_url}')
-    code = st.text_input('Enter the authorization code:')
-    if code:
-        result = app.acquire_token_by_authorization_code(code, scopes=['User.Read'], redirect_uri=REDIRECT_URI)
-        return result
+# Azure Storage Account details 
+DOCUMENT_STORAGE_CONNECTIONSTRING = os.getenv("DOCUMENT_STORAGE_CONNECTIONSTRING")
+TEMPLATE_DOCUMENT_CONTAINER = os.getenv("STORAGE_ACCOUNT_CONTAINER")
+TEMPLATE_DOCUMENT_QUEUE = os.getenv("TEMPLATE_DOCUMENT_QUEUE")
 
-def get_auth_url():
-    """Generates the Azure AD authorization URL."""
-    msal_app = build_msal_app()
-    auth_url = msal_app.get_authorization_request_url(
-        scopes=SCOPE,
-        redirect_uri=REDIRECT_URI
-    )
-    return auth_url
-
-def get_token_from_code(auth_code):
-    """Exchanges the authorization code for an access token."""
-    msal_app = build_msal_app()
-    result = msal_app.acquire_token_by_authorization_code(
-        auth_code,
-        scopes=SCOPE,
-        redirect_uri=REDIRECT_URI
-    )
-    return result
-
-def get_user_name(token_response):
-    """Extracts the user’s name from the token’s id_token claims."""
-    id_token_claims = token_response.get("id_token_claims")
-    if id_token_claims:
-        # Use 'preferred_username' or 'name' based on your preference and availability.
-        return id_token_claims.get("preferred_username") or id_token_claims.get("name")
-    return None
-
-def get_user_info2():
-    # Create an MSAL public client application instance
-    app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY)
-
-    # Get the authorization URL to redirect the user to sign in
-    auth_url = app.get_authorization_request_url(SCOPE, redirect_uri=REDIRECT_URI)
-    print("Go to the following URL to sign in:")
-    print(auth_url)
-
-    # Optionally, open the URL in a web browser
-    webbrowser.open(auth_url)
-
-    # After the user signs in, they will be redirected to your redirect URI
-    # with a code in the URL. Capture that code.
-    auth_code = input("Paste the authorization code here: ")
-
-    # Exchange the authorization code for tokens
-    result = app.acquire_token_by_authorization_code(
-        auth_code,
-        scopes=SCOPE,
-        redirect_uri=REDIRECT_URI
-    )
-
-    if "id_token_claims" in result:
-        id_token_claims = result["id_token_claims"]
-        user_name = id_token_claims.get("name")
-        print("Logged in as:", user_name)
-    else:
-        print("Authentication error:", result.get("error"), result.get("error_description"))
-
-def get_user_info():
-
-    app = msal.ConfidentialClientApplication(
-        CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET
-    )
-
-    result = app.acquire_token_for_client(scopes=["openid", "profile"])
-    st.write(result)
-    if "access_token" in result:
-        token = result['access_token']
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-        response = requests.get("https://occaiportalpoc.azurewebsites.net/.auth/me", headers=headers)
-        if response.status_code == 200:
-            user_info = response.json()
-            user_name = user_info['user_claims']['val']
-            print(f"Logged in user: {user_name}")
-        else:
-            print("Failed to fetch user information")
-    else:
-        print("Failed to acquire token")
-
-
-    response = requests.get("https://occaiportalpoc.azurewebsites.net/.auth/me")
-    if response.status_code == 200:
-        user_info = response.json()
-        return user_info
-    else:
-        return response
+# Function to upload file to Azure Storage
+def upload_to_azure_storage(files, foldername):
     
+    total_files = len(files)
+    progress_bar = st.progress(0)
 
-def read_aad_username():
-    session_id = get_script_run_ctx().session_id
-    session_info = Server.get_current()._get_session_info(session_id)
-    headers = session_info.ws.request.headers
+    for i, file in enumerate(files):
+        blob_service_client = BlobServiceClient.from_connection_string(f"{DOCUMENT_STORAGE_CONNECTIONSTRING}")
+        blob_client = blob_service_client.get_blob_client(container=TEMPLATE_DOCUMENT_CONTAINER, blob=foldername + "/" + file.name)
+        blob_client.upload_blob(file, overwrite=True)
+        
+        # Update the progress bar
+        percent_complete = (i + 1) / total_files
+        progress_bar.progress(percent_complete)
+        
+        st.markdown(f"**{file.name}** ✅ uploaded successfully")
 
-    headers = headers._dict
+def update_status_in_queue():
+    message = base64_encode("done")
+       
+    queue_service_client = QueueServiceClient.from_connection_string(f"{DOCUMENT_STORAGE_CONNECTIONSTRING}")
+    queue_client = queue_service_client.get_queue_client(TEMPLATE_DOCUMENT_QUEUE)
+    queue_client.send_message( message)
 
-    if "X-Ms-Client-Principal-Name" in headers:
-        username = headers["X-Ms-Client-Principal-Name"]
-        st.write(f"Logged in as {username}")
-    else:
-        st.warning(f"could not directly read username from azure active directory.")
-        username = None
-    return username
+
+def base64_encode(plain_text):
+    plain_text_bytes = plain_text.encode('utf-8')
+    return base64.b64encode(plain_text_bytes).decode('utf-8')
