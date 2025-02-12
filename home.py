@@ -108,7 +108,7 @@ random_number = random.randint(100000, 999999)
 foldername = f"{date_string}_{random_number}"
 
 
-uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=False)
+uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
 
 if uploaded_files:
     upload_to_azure_storage(uploaded_files, foldername)
