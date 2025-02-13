@@ -80,57 +80,58 @@ def upload_to_azure_storage(files, foldername):
     progress_bar = st.progress(0)
 
     for i, file in enumerate(files):
-        blob_service_client = BlobServiceClient.from_connection_string(f"{DOCUMENT_STORAGE_CONNECTIONSTRING}")
-        blob_client = blob_service_client.get_blob_client(container=TEMPLATE_DOCUMENT_CONTAINER, blob=foldername + "/" + file.name)
-        blob_client.upload_blob(file, overwrite=True)
-        
         # Update the progress bar
         percent_complete = (i + 1) / total_files
         progress_bar.progress(percent_complete)
+        upload_file_to_azure_storage(file, foldername)
 
-        apiurl = "https://occ-notebook-test.azurewebsites.net/api/generate_insights"
-        params = {"folder_name": foldername} 
-        response = requests.get(apiurl, params=params)
+def upload_file_to_azure_storage(file, foldername):
+    blob_service_client = BlobServiceClient.from_connection_string(f"{DOCUMENT_STORAGE_CONNECTIONSTRING}")
+    blob_client = blob_service_client.get_blob_client(container=TEMPLATE_DOCUMENT_CONTAINER, blob=foldername + "/" + file.name)
+    blob_client.upload_blob(file, overwrite=True)
+    
+    apiurl = "https://occ-notebook-test.azurewebsites.net/api/generate_insights"
+    params = {"folder_name": foldername} 
+    response = requests.get(apiurl, params=params)
 
-        st.markdown(f"**{file.name}** ✅ uploaded successfully")
-       # url = generate_document_url(foldername, file.name)
-       # st.markdown(f"[Download/View File]({url})")
-        # Use an if-statement to check if the button is clicked.
-       # if st.button(f"Fetch {file.name}"):
-       #     file_data = download_file_from_blob(foldername, file.name)
-       #     st.success(f"File '{file.name}' has been fetched from Azure!")
+    st.markdown(f"**{file.name}** ✅ uploaded successfully")
+    # url = generate_document_url(foldername, file.name)
+    # st.markdown(f"[Download/View File]({url})")
+    # Use an if-statement to check if the button is clicked.
+    # if st.button(f"Fetch {file.name}"):
+    #     file_data = download_file_from_blob(foldername, file.name)
+    #     st.success(f"File '{file.name}' has been fetched from Azure!")
 
-            # Provide a download button for the user to save the file locally
-            # label_text = f"Download {file.name}"
-            # st.download_button(
-            #     label=label_text,
-            #     data=file_data,
-            #     file_name=file.name,
-            #     mime="text/markdown"  # Adjust MIME type if needed
+        # Provide a download button for the user to save the file locally
+        # label_text = f"Download {file.name}"
+        # st.download_button(
+        #     label=label_text,
+        #     data=file_data,
+        #     file_name=file.name,
+        #     mime="text/markdown"  # Adjust MIME type if needed
 
-            # Create two columns of equal width
-        col1, col2 = st.columns(2)
-        # Place the fetch button in the first column
-        with col1:
-            fetch_clicked = st.button(f"Fetch {file.name}", key=f"fetch_{file.name}")
+        # Create two columns of equal width
+    col1, col2 = st.columns(2)
+    # Place the fetch button in the first column
+    with col1:
+        fetch_clicked = st.button(f"Fetch {file.name}", key=f"fetch_{file.name}")
 
-        # Create an empty placeholder in the second column for the download button
-        with col2:
-            download_placeholder = st.empty()
+    # Create an empty placeholder in the second column for the download button
+    with col2:
+        download_placeholder = st.empty()
 
-        # When the fetch button is clicked, download the file from Azure and render the download button in col2
-        if fetch_clicked:
-            file_data = download_file_from_blob(foldername, file.name)
-            # st.success(f"File '{file.name}' has been fetched from Azure!")
-            label_text = f"Download {file.name}"
-            download_placeholder.download_button(
-                label=label_text,
-                data=file_data,
-                file_name=file.name,
-                key=f"download_{file.name}",
-                mime="text/markdown"  # Adjust MIME type if needed
-            )  # Adjust MIME type if needed
-
+    # When the fetch button is clicked, download the file from Azure and render the download button in col2
+    if fetch_clicked:
+        file_data = download_file_from_blob(foldername, file.name)
+        # st.success(f"File '{file.name}' has been fetched from Azure!")
+        label_text = f"Download {file.name}"
+        download_placeholder.download_button(
+            label=label_text,
+            data=file_data,
+            file_name=file.name,
+            key=f"download_{file.name}",
+            mime="text/markdown"  # Adjust MIME type if needed
+        )  # Adjust MIME type if needed
 
 
 def update_status_in_queue():

@@ -6,7 +6,7 @@ import datetime
 import random
 import requests
 
-from utils import upload_to_azure_storage, update_status_in_queue, get_base64_of_bin_file
+from utils import upload_to_azure_storage, upload_file_to_azure_storage, update_status_in_queue, get_base64_of_bin_file
 
 
 st.set_page_config(
@@ -107,25 +107,20 @@ date_string = datetime.datetime.now().strftime("%m%d%Y")
 random_number = random.randint(100000, 999999)
 foldername = f"{date_string}_{random_number}"
 
+# Use this code if you want to upload single files
+uploaded_file = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=False)
+if uploaded_file:
+    upload_file_to_azure_storage(uploaded_file, foldername)
+    update_status_in_queue() 
 
-uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+# Use this code if you want to upload multiple files
+# uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+# if uploaded_files:
+#     upload_to_azure_storage(uploaded_files, foldername)
 
-if uploaded_files:
-    upload_to_azure_storage(uploaded_files, foldername)
+#     #Upload status to queue
+#     update_status_in_queue()      
     
-    #Upload status to queue
-    update_status_in_queue()      
-    
-    #st.success("File uploaded to Azure Storage - Now processing!")    # Add your file processing code here
-
-
-    # Check the status code and response data
-    # if response.ok:
-    #     data = response.text  # or response.text depending on the API response format
-    #     st.success("File processed successfully!") 
-    # else:
-    #     st.error("Request failed with status:", response.status_code)    
-
 
 st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown(
