@@ -6,14 +6,13 @@ import datetime
 import random
 import requests
 
-from utils import upload_to_azure_storage, upload_file_to_azure_storage, update_status_in_queue, get_base64_of_bin_file
+from utils import upload_to_azure_storage, upload_file_to_azure_storage, fetch_buttton, update_status_in_queue, get_base64_of_bin_file
 
 
 st.set_page_config(
     page_title="OCC Doc Assist'",
     page_icon=":anchor:",
 )
-
 
 # Path to your local image file
 image_path = "images/bkground.jpg"  # Update this path accordingly
@@ -26,6 +25,7 @@ page_bg_img = f"""
 <style>
 .stApp {{
     background-image: url("data:image/jpeg;base64,{bin_str}");
+    background-color: blue;  /* fallback for old browsers */
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -59,12 +59,14 @@ st.markdown(
     """, unsafe_allow_html=True
 )
 
+
+
 # Add a CSS style block to make text white
 st.markdown(
     """
     <style>
     h1, h2, h3, h4, h5, h6, p, li, a {
-        color: white;
+        color: white !important;
     }
     </style>
     """,
@@ -90,7 +92,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<h3 style="color: white;">OCC Doc Assist</h3>',
+    '<h2 style="color: white;">OCC Doc Assist</h2>',
     unsafe_allow_html=True
 )
 
@@ -102,25 +104,40 @@ if header is None:
 
 st.write("Hello " + header)
 
-## Create folder with current date and random number
-date_string = datetime.datetime.now().strftime("%m%d%Y")
-random_number = random.randint(100000, 999999)
-foldername = f"{date_string}_{random_number}"
 
-# Use this code if you want to upload single files
-uploaded_file = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=False)
-if uploaded_file:
+# Initialize a flag in session state if it doesn't exist yet.
+if "file_processed" not in st.session_state:
+    st.session_state.file_processed = False
+if "foldername" not in st.session_state:
+    st.session_state.foldername = ""
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+
+
+# Use this code if you want to upload single file
+uploaded_file = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=False, key="uploaded_files")
+# Check if a file is uploaded and hasn't been processed yet.
+if uploaded_file and not st.session_state.file_processed:
+    ## Create folder with current date and random number
+    date_string = datetime.datetime.now().strftime("%m%d%Y")
+    random_number = random.randint(100000, 999999)
+    foldername = f"{date_string}_{random_number}"
     upload_file_to_azure_storage(uploaded_file, foldername)
     update_status_in_queue() 
+    st.session_state.file_processed = True
+    fetch_buttton(uploaded_file, foldername)
+    st.session_state.foldername = foldername
+    st.session_state.uploaded_file = uploaded_file
+elif st.session_state.foldername != "":
+    fetch_buttton(st.session_state.uploaded_file, st.session_state.foldername)
 
 # Use this code if you want to upload multiple files
 # uploaded_files = st.file_uploader("Choose a file(s)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
 # if uploaded_files:
 #     upload_to_azure_storage(uploaded_files, foldername)
-
 #     #Upload status to queue
 #     update_status_in_queue()      
-    
+
 
 st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown(
