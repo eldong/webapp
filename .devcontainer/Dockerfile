@@ -12,6 +12,7 @@ ARG USER_GID=$USER_UID
 
 # Set up non-root user
 COPY ./scripts/non-root-user.sh /tmp/
+RUN chmod +x /tmp/docker-client.sh
 RUN bash "/tmp/non-root-user.sh" "${USERNAME}" "${USER_UID}" "${USER_GID}"
 
 # Set env for tracking that we're running in a devcontainer
